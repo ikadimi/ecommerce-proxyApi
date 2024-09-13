@@ -1,6 +1,8 @@
 // server.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
@@ -11,22 +13,35 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(cors({
+  credentials: true,
+  origin: 'http://localhost:4200'
+}));
+
+app.use(cookieParser());
+
 // Secret key for JWT verification
 const JWT_SECRET = 'secret';
 
-// Middleware to verify JWT for all routes
 function authenticateJWT(req, res, next) {
-  const token = req.headers['authorization'];
-
-  if (!token) {
-    return res.status(403).send({ message: 'No token provided!' });
+  if (!req.cookies || !req.cookies.jwt) {
+    return res.status(401).json({ message: 'No token provided!' });
   }
 
-  jwt.verify(token.split(' ')[1], JWT_SECRET, (err, decoded) => {
+  const token = req.cookies.jwt;
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: 'Unauthorized!' });
+      console.error('Token verification failed:', err);
+      return res.status(401).json({ message: 'Unauthorized! Invalid token.' });
     }
-    req.user = decoded; // Optional: store the decoded user info in request
+
+    if (!decoded || !decoded.userId) {
+      console.error('No userId in the token:', decoded);
+      return res.status(400).json({ message: 'Token does not contain a valid userId.' });
+    }
+
+    req.headers['x-user-id'] = decoded.userId;
     next();
   });
 }
