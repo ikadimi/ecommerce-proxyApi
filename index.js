@@ -47,6 +47,13 @@ function authenticateJWT(req, res, next) {
 }
 
 // Proxy configurations for each microservice
+const ordersProxy = createProxyMiddleware({
+  target: 'http://localhost:3005',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/orders': '',
+  },
+});
 const checkoutProxy = createProxyMiddleware({
   target: 'http://localhost:3004',
   changeOrigin: true,
@@ -80,6 +87,7 @@ const authProxy = createProxyMiddleware({
 });
 
 // Apply JWT middleware and proxy for each microservice
+app.use('/orders', authenticateJWT, ordersProxy);
 app.use('/checkout', authenticateJWT, checkoutProxy);
 app.use('/cart', authenticateJWT, cartProxy);
 
