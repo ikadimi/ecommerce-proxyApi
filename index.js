@@ -1,4 +1,4 @@
-// server.js
+require('dotenv').config();
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
@@ -21,7 +21,7 @@ app.use(cors({
 app.use(cookieParser());
 
 // Secret key for JWT verification
-const JWT_SECRET = 'secret';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function authenticateJWT(req, res, next) {
   if (!req.cookies || !req.cookies.jwt) {
@@ -48,14 +48,14 @@ function authenticateJWT(req, res, next) {
 
 // Proxy configurations for each microservice
 const ordersProxy = createProxyMiddleware({
-  target: 'http://localhost:3005',
+  target: process.env.ORDERS_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/orders': '',
   },
 });
 const checkoutProxy = createProxyMiddleware({
-  target: 'http://localhost:3004',
+  target: process.env.CHECKOUT_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/checkout': '',
@@ -63,7 +63,7 @@ const checkoutProxy = createProxyMiddleware({
 });
 
 const cartProxy = createProxyMiddleware({
-  target: 'http://localhost:3002',
+  target: process.env.CART_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/cart': '',
@@ -71,7 +71,7 @@ const cartProxy = createProxyMiddleware({
 });
 
 const catalogProxy = createProxyMiddleware({
-  target: 'http://localhost:3000',
+  target: process.env.CATALOG_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/catalog': '',
@@ -79,7 +79,7 @@ const catalogProxy = createProxyMiddleware({
 });
 
 const authProxy = createProxyMiddleware({
-  target: 'http://localhost:3001',
+  target: process.env.AUTH_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/auth': '',
